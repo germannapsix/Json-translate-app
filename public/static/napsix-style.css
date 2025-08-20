@@ -1,0 +1,379 @@
+/* 
+ * 📘 Napsix Chat - Manual de Estilo v1.0
+ * Traductor de Documentos JSON
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+  /* 1.1 Colores base - Napsix Chat */
+  --primary: oklch(0.3819 0.1180 305.2137);
+  --primary-hover: oklch(0.4219 0.1380 305.2137);
+  --secondary: oklch(0.8493 0.2073 128.8497);
+  --secondary-hover: oklch(0.7893 0.2273 128.8497);
+  
+  /* Acentos */
+  --accent: oklch(0.7 0.15 200);
+  --muted: oklch(0.9 0.02 270);
+  --destructive: oklch(0.6 0.2 20);
+  
+  /* Chart colors para estadísticas */
+  --chart-1: oklch(0.6 0.15 280);
+  --chart-2: oklch(0.7 0.18 150);
+  --chart-3: oklch(0.65 0.16 60);
+  --chart-4: oklch(0.75 0.14 320);
+  --chart-5: oklch(0.55 0.12 180);
+  
+  /* Modo claro */
+  --background: oklch(0.98 0.01 270);
+  --foreground: oklch(0.15 0.05 270);
+  --card: oklch(0.95 0.01 270);
+  --card-foreground: oklch(0.2 0.05 270);
+  --popover: oklch(0.97 0.01 270);
+  --popover-foreground: var(--foreground);
+  --input: oklch(0.92 0.01 270);
+  --border: oklch(0.88 0.02 270);
+  --ring: var(--primary);
+  
+  /* Sidebar colors */
+  --sidebar-background: oklch(0.96 0.01 270);
+  --sidebar-foreground: oklch(0.25 0.05 270);
+  
+  /* Sombras estandarizadas */
+  --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-xs: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-2xl: 0 50px 100px -20px rgb(0 0 0 / 0.25);
+  
+  /* 3. Espaciado y Radios */
+  --radius-base: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --spacing-base: 0.25rem;
+}
+
+[data-theme="dark"] {
+  /* Modo oscuro - predominio de grises azulados */
+  --background: oklch(0.08 0.02 270);
+  --foreground: oklch(0.92 0.01 270);
+  --card: oklch(0.12 0.02 270);
+  --card-foreground: oklch(0.88 0.01 270);
+  --popover: oklch(0.1 0.02 270);
+  --popover-foreground: var(--foreground);
+  --input: oklch(0.15 0.02 270);
+  --border: oklch(0.25 0.03 270);
+  --muted: oklch(0.2 0.02 270);
+  
+  /* Sidebar colors - modo oscuro */
+  --sidebar-background: oklch(0.1 0.02 270);
+  --sidebar-foreground: oklch(0.9 0.01 270);
+}
+
+/* 2. Tipografía - Poppins principal */
+body {
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.01em;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Clases de utilidad para tipografía */
+.font-sans { font-family: 'Poppins', sans-serif; }
+.font-serif { font-family: serif; }
+.font-mono { font-family: monospace; }
+
+/* 4. Clases base del sistema de diseño */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-base);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  border: none;
+  border-radius: var(--radius-base);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-destructive {
+  background-color: var(--destructive);
+  color: white;
+  border: none;
+  border-radius: var(--radius-base);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.card {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.input {
+  background-color: var(--input);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.2);
+}
+
+/* Progress Bar con estilo Napsix */
+.progress-container {
+  background-color: var(--muted);
+  border-radius: var(--radius-base);
+  overflow: hidden;
+  position: relative;
+  height: 8px;
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  height: 100%;
+  border-radius: var(--radius-base);
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Estados de progreso */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-base);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.status-preparing {
+  background-color: oklch(from var(--chart-1) l c h / 0.1);
+  color: var(--chart-1);
+  border: 1px solid oklch(from var(--chart-1) l c h / 0.2);
+}
+
+.status-translating {
+  background-color: oklch(from var(--primary) l c h / 0.1);
+  color: var(--primary);
+  border: 1px solid oklch(from var(--primary) l c h / 0.2);
+}
+
+.status-processing {
+  background-color: oklch(from var(--chart-2) l c h / 0.1);
+  color: var(--chart-2);
+  border: 1px solid oklch(from var(--chart-2) l c h / 0.2);
+}
+
+.status-completing {
+  background-color: oklch(from var(--secondary) l c h / 0.1);
+  color: var(--secondary);
+  border: 1px solid oklch(from var(--secondary) l c h / 0.2);
+}
+
+.status-completed {
+  background-color: oklch(from var(--chart-2) l c h / 0.1);
+  color: var(--chart-2);
+  border: 1px solid oklch(from var(--chart-2) l c h / 0.2);
+}
+
+/* Animación de loading */
+.loading-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+  animation: loading-pulse 1.4s infinite both;
+}
+
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading-pulse {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+/* Estadísticas con colores del chart */
+.stat-success {
+  background-color: oklch(from var(--chart-2) l c h / 0.1);
+  color: var(--chart-2);
+  border: 1px solid oklch(from var(--chart-2) l c h / 0.2);
+}
+
+.stat-error {
+  background-color: oklch(from var(--destructive) l c h / 0.1);
+  color: var(--destructive);
+  border: 1px solid oklch(from var(--destructive) l c h / 0.2);
+}
+
+.stat-time {
+  background-color: oklch(from var(--chart-1) l c h / 0.1);
+  color: var(--chart-1);
+  border: 1px solid oklch(from var(--chart-1) l c h / 0.2);
+}
+
+.stat-avg {
+  background-color: oklch(from var(--chart-4) l c h / 0.1);
+  color: var(--chart-4);
+  border: 1px solid oklch(from var(--chart-4) l c h / 0.2);
+}
+
+/* File drop zone mejorada */
+.file-drop-zone {
+  border: 2px dashed var(--border);
+  background-color: var(--card);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+}
+
+.file-drop-zone:hover {
+  border-color: var(--primary);
+  background-color: oklch(from var(--primary) l c h / 0.05);
+}
+
+.file-drop-zone.dragover {
+  border-color: var(--primary);
+  background-color: oklch(from var(--primary) l c h / 0.1);
+  transform: scale(1.02);
+}
+
+/* JSON Editor mejorado */
+.json-editor {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background-color: var(--input);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  transition: all 0.2s ease;
+}
+
+.json-editor:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.2);
+}
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-base);
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
+.theme-toggle:hover {
+  background-color: var(--muted);
+  transform: scale(1.1);
+}
+
+/* Microinteracciones y animaciones suaves */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-destructive {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .card {
+    border-radius: var(--radius-base);
+  }
+  
+  .theme-toggle {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}

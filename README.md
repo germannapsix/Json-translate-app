@@ -17,6 +17,31 @@
 - **API de Idiomas**: https://3000-i0wiom2yqfg0dliarfa3g-6532622b.e2b.dev/api/languages
 - **API de Traducción**: https://3000-i0wiom2yqfg0dliarfa3g-6532622b.e2b.dev/api/translate
 
+## ✨ Actualizaciones v2.0 - Napsix Chat Style
+
+### 🎨 Diseño Completamente Renovado
+- **Hoja de Estilos Napsix**: Implementación completa del manual de estilo v1.0
+- **Variables CSS Personalizadas**: Sistema de colores OKLCH, tipografía Poppins, espaciado estandarizado
+- **Modo Oscuro/Claro**: Toggle dinámico con persistencia en localStorage
+- **Animaciones Fluidas**: Microinteracciones, transiciones suaves, efectos hover mejorados
+
+### ⏱️ Indicador de Progreso Avanzado
+- **Estimación de Tiempo Real**: Tiempo transcurrido y tiempo restante calculado dinámicamente
+- **Estados Detallados**: 5 fases de progreso (Preparando, Traduciendo, Procesando, Completando, Finalizado)
+- **Progreso por Pasos**: Visualización granular del proceso de traducción
+- **Métricas de Rendimiento**: Velocidad de traducción, eficiencia, estadísticas por segundo
+
+### 📊 Estadísticas Mejoradas
+- **Métricas Adicionales**: Claves por segundo, eficiencia, conteo de caracteres
+- **Visualización Avanzada**: Barras de progreso con gradiente, iconografía mejorada
+- **Códigos de Color**: Sistema visual basado en el rendimiento (éxito/error/tiempo)
+
+### 🎯 Interfaz de Usuario Mejorada
+- **Cards Responsivas**: Diseño modular con hover effects y sombras dinámicas
+- **Historial Enriquecido**: Información detallada, filtros visuales, estados de éxito
+- **Modal Detallada**: Vista expandida con métricas completas por traducción
+- **Funciones de Productividad**: Botón copiar, indicador de tamaño de archivo
+
 ## Funcionalidades Implementadas
 
 ### ✅ Completadas
@@ -148,8 +173,8 @@
   - Database: Cloudflare D1 (SQLite)
   - Deployment: Cloudflare Pages + PM2
 
-- **Last Updated**: 2025-08-20
-- **Version**: 1.0.0
+- **Last Updated**: 2025-08-20  
+- **Version**: 2.0.0 - Napsix Chat Edition
 
 ## Próximos Pasos Recomendados
 

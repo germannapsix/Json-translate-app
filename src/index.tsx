@@ -288,37 +288,58 @@ app.get('/api/languages', (c) => {
 app.get('/', (c) => {
   return c.html(`
     <!DOCTYPE html>
-    <html lang="es">
+    <html lang="es" data-theme="light">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Traductor de JSON</title>
+        <title>Traductor de JSON - Napsix Chat</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-        <style>
-            .file-drop-zone {
-                border: 2px dashed #cbd5e0;
-                transition: all 0.3s ease;
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="/static/napsix-style.css" rel="stylesheet">
+        <script>
+            // Configure Tailwind to use CSS variables
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: 'oklch(var(--primary))',
+                            secondary: 'oklch(var(--secondary))',
+                            background: 'var(--background)',
+                            foreground: 'var(--foreground)',
+                            card: 'var(--card)',
+                            'card-foreground': 'var(--card-foreground)',
+                            border: 'var(--border)',
+                            input: 'var(--input)',
+                            ring: 'var(--ring)'
+                        }
+                    }
+                }
             }
-            .file-drop-zone.dragover {
-                border-color: #4299e1;
-                background-color: #ebf8ff;
-            }
-            .json-editor {
-                font-family: 'Courier New', monospace;
-            }
-        </style>
+        </script>
     </head>
-    <body class="bg-gray-50 min-h-screen">
+    <body class="min-h-screen"
+          style="background-color: var(--background); color: var(--foreground);">
+        
+        <!-- Theme Toggle -->
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </div>
         <div class="container mx-auto px-4 py-8">
-            <div class="max-w-6xl mx-auto">
+            <div class="max-w-7xl mx-auto">
                 <!-- Header -->
-                <div class="text-center mb-8">
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">
-                        <i class="fas fa-language mr-3 text-blue-500"></i>
+                <div class="text-center mb-8 animate-fade-in">
+                    <h1 class="text-5xl font-bold mb-3" style="color: var(--foreground);">
+                        <i class="fas fa-language mr-3" style="color: var(--primary);"></i>
                         Traductor de Documentos JSON
                     </h1>
-                    <p class="text-gray-600">Traduce archivos JSON completos manteniendo su estructura original</p>
+                    <p class="text-xl opacity-80" style="color: var(--foreground);">
+                        Traduce archivos JSON completos manteniendo su estructura original
+                    </p>
+                    <div class="mt-4 text-sm opacity-60">
+                        <i class="fas fa-magic mr-2"></i>
+                        Powered by Napsix Chat AI • Cloudflare Workers
+                    </div>
                 </div>
                 
                 <!-- Main Content -->
@@ -326,158 +347,295 @@ app.get('/', (c) => {
                     <!-- Left Panel: Upload and Configuration -->
                     <div class="space-y-6">
                         <!-- File Upload -->
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-upload mr-2"></i>
+                        <div class="card p-6 animate-slide-up">
+                            <h2 class="text-xl font-semibold mb-4" style="color: var(--card-foreground);">
+                                <i class="fas fa-upload mr-2" style="color: var(--primary);"></i>
                                 Cargar JSON
                             </h2>
                             
-                            <div id="drop-zone" class="file-drop-zone rounded-lg p-8 text-center cursor-pointer">
-                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                                <p class="text-gray-600 mb-2">Arrastra y suelta tu archivo JSON aquí</p>
-                                <p class="text-sm text-gray-500 mb-4">o haz clic para seleccionar</p>
+                            <div id="drop-zone" class="file-drop-zone p-8 text-center cursor-pointer">
+                                <i class="fas fa-cloud-upload-alt text-4xl mb-4 opacity-60" style="color: var(--primary);"></i>
+                                <p class="mb-2" style="color: var(--card-foreground);">Arrastra y suelta tu archivo JSON aquí</p>
+                                <p class="text-sm mb-4 opacity-70" style="color: var(--card-foreground);">o haz clic para seleccionar</p>
                                 <input type="file" id="file-input" accept=".json" class="hidden">
                                 <button onclick="document.getElementById('file-input').click()" 
-                                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                                        class="btn-primary">
+                                    <i class="fas fa-folder-open mr-2"></i>
                                     Seleccionar Archivo
                                 </button>
                             </div>
                             
                             <!-- JSON Editor -->
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium mb-3" style="color: var(--card-foreground);">
+                                    <i class="fas fa-code mr-2"></i>
                                     O pega tu JSON aquí:
                                 </label>
                                 <textarea id="json-input" 
-                                         class="json-editor w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                                         placeholder='{"key": "value", "greeting": "Hello World"}'></textarea>
+                                         class="json-editor w-full h-36 p-4 resize-none" 
+                                         placeholder='{\n  "welcome": "Hello World",\n  "app": {\n    "name": "Mi Aplicación",\n    "version": "1.0.0"\n  }\n}'></textarea>
+                                <div class="mt-2 text-xs opacity-60" style="color: var(--card-foreground);">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Formato JSON válido requerido
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Language Selection -->
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-globe mr-2"></i>
+                        <div class="card p-6 animate-slide-up" style="animation-delay: 0.1s;">
+                            <h2 class="text-xl font-semibold mb-4" style="color: var(--card-foreground);">
+                                <i class="fas fa-globe mr-2" style="color: var(--secondary);"></i>
                                 Configuración de Idiomas
                             </h2>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Idioma Origen</label>
-                                    <select id="source-lang" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                        <option value="auto">Detectar automáticamente</option>
+                                    <label class="block text-sm font-medium mb-3" style="color: var(--card-foreground);">
+                                        <i class="fas fa-language mr-2"></i>
+                                        Idioma Origen
+                                    </label>
+                                    <select id="source-lang" class="input w-full">
+                                        <option value="auto">🔍 Detectar automáticamente</option>
                                     </select>
                                 </div>
                                 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Idioma Destino *</label>
-                                    <select id="target-lang" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                        <option value="">Seleccionar idioma...</option>
+                                    <label class="block text-sm font-medium mb-3" style="color: var(--card-foreground);">
+                                        <i class="fas fa-bullseye mr-2" style="color: var(--destructive);"></i>
+                                        Idioma Destino *
+                                    </label>
+                                    <select id="target-lang" class="input w-full">
+                                        <option value="">🎯 Seleccionar idioma...</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <button id="translate-btn" 
-                                    class="w-full mt-4 bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="btn-secondary w-full mt-6 py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
                                 <i class="fas fa-magic mr-2"></i>
                                 Traducir JSON
                             </button>
+                            
+                            <div class="mt-4 text-xs opacity-60 text-center" style="color: var(--card-foreground);">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                Procesamiento seguro con IA de Cloudflare
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Right Panel: Results and Statistics -->
                     <div class="space-y-6">
                         <!-- Translation Progress -->
-                        <div id="progress-panel" class="bg-white rounded-lg shadow p-6 hidden">
-                            <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-cogs mr-2"></i>
+                        <div id="progress-panel" class="card p-6 hidden animate-slide-up">
+                            <h2 class="text-xl font-semibold mb-4" style="color: var(--card-foreground);">
+                                <i class="fas fa-cogs mr-2" style="color: var(--primary);"></i>
                                 Progreso de Traducción
                             </h2>
                             
-                            <div class="mb-4">
-                                <div class="flex justify-between text-sm text-gray-600 mb-2">
-                                    <span>Procesando...</span>
+                            <!-- Estado actual -->
+                            <div class="mb-6">
+                                <div id="current-status" class="status-indicator status-preparing mb-4">
+                                    <div class="loading-dot"></div>
+                                    <div class="loading-dot"></div>
+                                    <div class="loading-dot"></div>
+                                    <span id="status-text">Preparando traducción...</span>
+                                </div>
+                                
+                                <div class="flex justify-between text-sm mb-2" style="color: var(--card-foreground);">
+                                    <span id="progress-label">Iniciando...</span>
                                     <span id="progress-text">0%</span>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                
+                                <div class="progress-container">
+                                    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                                </div>
+                                
+                                <!-- Estimación de tiempo -->
+                                <div class="flex justify-between text-xs mt-2 opacity-70" style="color: var(--card-foreground);">
+                                    <span>
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Tiempo transcurrido: <span id="elapsed-time">0s</span>
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-hourglass-half mr-1"></i>
+                                        Tiempo estimado: <span id="estimated-time">Calculando...</span>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Detalles del proceso -->
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center justify-between py-2 border-b border-opacity-20" style="border-color: var(--border);">
+                                    <span class="flex items-center">
+                                        <i id="step-1-icon" class="fas fa-circle-notch fa-spin mr-2 opacity-50"></i>
+                                        Análisis del JSON
+                                    </span>
+                                    <span id="step-1-status" class="text-xs opacity-60">Pendiente</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between py-2 border-b border-opacity-20" style="border-color: var(--border);">
+                                    <span class="flex items-center">
+                                        <i id="step-2-icon" class="fas fa-circle mr-2 opacity-30"></i>
+                                        Traducción de contenido
+                                    </span>
+                                    <span id="step-2-status" class="text-xs opacity-60">Esperando</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between py-2 border-b border-opacity-20" style="border-color: var(--border);">
+                                    <span class="flex items-center">
+                                        <i id="step-3-icon" class="fas fa-circle mr-2 opacity-30"></i>
+                                        Generación de estadísticas
+                                    </span>
+                                    <span id="step-3-status" class="text-xs opacity-60">Esperando</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between py-2">
+                                    <span class="flex items-center">
+                                        <i id="step-4-icon" class="fas fa-circle mr-2 opacity-30"></i>
+                                        Finalización
+                                    </span>
+                                    <span id="step-4-status" class="text-xs opacity-60">Esperando</span>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Statistics -->
-                        <div id="stats-panel" class="bg-white rounded-lg shadow p-6 hidden">
-                            <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                                <i class="fas fa-chart-bar mr-2"></i>
+                        <div id="stats-panel" class="card p-6 hidden animate-slide-up" style="animation-delay: 0.2s;">
+                            <h2 class="text-xl font-semibold mb-6" style="color: var(--card-foreground);">
+                                <i class="fas fa-chart-bar mr-2" style="color: var(--chart-1);"></i>
                                 Estadísticas de Traducción
                             </h2>
                             
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div class="bg-green-50 p-3 rounded-lg">
-                                    <div class="text-2xl font-bold text-green-600" id="translated-count">0</div>
-                                    <div class="text-sm text-green-700">Claves Traducidas</div>
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="stat-success p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold" id="translated-count">0</div>
+                                            <div class="text-sm opacity-80">Claves Traducidas</div>
+                                        </div>
+                                        <i class="fas fa-check-circle text-2xl opacity-60"></i>
+                                    </div>
                                 </div>
                                 
-                                <div class="bg-red-50 p-3 rounded-lg">
-                                    <div class="text-2xl font-bold text-red-600" id="failed-count">0</div>
-                                    <div class="text-sm text-red-700">Fallos</div>
+                                <div class="stat-error p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold" id="failed-count">0</div>
+                                            <div class="text-sm opacity-80">Fallos</div>
+                                        </div>
+                                        <i class="fas fa-exclamation-circle text-2xl opacity-60"></i>
+                                    </div>
                                 </div>
                                 
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="text-2xl font-bold text-blue-600" id="total-time">0ms</div>
-                                    <div class="text-sm text-blue-700">Tiempo Total</div>
+                                <div class="stat-time p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold" id="total-time">0ms</div>
+                                            <div class="text-sm opacity-80">Tiempo Total</div>
+                                        </div>
+                                        <i class="fas fa-stopwatch text-2xl opacity-60"></i>
+                                    </div>
                                 </div>
                                 
-                                <div class="bg-purple-50 p-3 rounded-lg">
-                                    <div class="text-2xl font-bold text-purple-600" id="avg-time">0ms</div>
-                                    <div class="text-sm text-purple-700">Tiempo Promedio</div>
+                                <div class="stat-avg p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold" id="avg-time">0ms</div>
+                                            <div class="text-sm opacity-80">Tiempo Promedio</div>
+                                        </div>
+                                        <i class="fas fa-tachometer-alt text-2xl opacity-60"></i>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="mb-4">
-                                <div class="text-sm text-gray-600 mb-2">Tasa de Éxito</div>
-                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                    <div id="success-rate-bar" class="bg-green-500 h-3 rounded-full" style="width: 0%"></div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm font-medium" style="color: var(--card-foreground);">
+                                        <i class="fas fa-trophy mr-2" style="color: var(--chart-2);"></i>
+                                        Tasa de Éxito
+                                    </span>
+                                    <span id="success-rate-text" class="text-sm font-bold" style="color: var(--chart-2);">0%</span>
                                 </div>
-                                <div class="text-right text-sm text-gray-600 mt-1" id="success-rate-text">0%</div>
+                                <div class="progress-container h-4">
+                                    <div id="success-rate-bar" class="progress-bar" style="width: 0%; background: linear-gradient(90deg, var(--chart-2), var(--secondary));"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Métricas adicionales -->
+                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div class="text-center p-2 rounded" style="background-color: oklch(from var(--chart-3) l c h / 0.1);">
+                                    <div class="font-semibold" style="color: var(--chart-3);" id="keys-per-second">0</div>
+                                    <div class="opacity-70" style="color: var(--chart-3);">Claves/seg</div>
+                                </div>
+                                <div class="text-center p-2 rounded" style="background-color: oklch(from var(--chart-4) l c h / 0.1);">
+                                    <div class="font-semibold" style="color: var(--chart-4);" id="efficiency-score">0%</div>
+                                    <div class="opacity-70" style="color: var(--chart-4);">Eficiencia</div>
+                                </div>
+                                <div class="text-center p-2 rounded" style="background-color: oklch(from var(--chart-5) l c h / 0.1);">
+                                    <div class="font-semibold" style="color: var(--chart-5);" id="total-chars">0</div>
+                                    <div class="opacity-70" style="color: var(--chart-5);">Caracteres</div>
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Result JSON -->
-                        <div id="result-panel" class="bg-white rounded-lg shadow p-6 hidden">
+                        <div id="result-panel" class="card p-6 hidden animate-slide-up" style="animation-delay: 0.3s;">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-semibold text-gray-900">
-                                    <i class="fas fa-file-code mr-2"></i>
+                                <h2 class="text-xl font-semibold" style="color: var(--card-foreground);">
+                                    <i class="fas fa-file-code mr-2" style="color: var(--chart-2);"></i>
                                     JSON Traducido
                                 </h2>
-                                <button id="download-btn" 
-                                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                                    <i class="fas fa-download mr-2"></i>
-                                    Descargar
-                                </button>
+                                <div class="flex gap-2">
+                                    <button id="copy-btn" 
+                                            class="btn-secondary px-3 py-2 text-sm"
+                                            onclick="copyToClipboard()">
+                                        <i class="fas fa-copy mr-1"></i>
+                                        Copiar
+                                    </button>
+                                    <button id="download-btn" 
+                                            class="btn-primary px-4 py-2">
+                                        <i class="fas fa-download mr-2"></i>
+                                        Descargar
+                                    </button>
+                                </div>
                             </div>
                             
                             <textarea id="result-json" 
-                                     class="json-editor w-full h-64 p-3 border border-gray-300 rounded-lg bg-gray-50" 
-                                     readonly></textarea>
+                                     class="json-editor w-full h-80 p-4 resize-none"
+                                     readonly
+                                     style="background-color: var(--input);"></textarea>
+                                     
+                            <div class="mt-3 flex justify-between text-xs opacity-60" style="color: var(--card-foreground);">
+                                <span>
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    JSON válido generado
+                                </span>
+                                <span id="json-size">0 bytes</span>
+                            </div>
                         </div>
                         
                         <!-- Translation History -->
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-semibold text-gray-900">
-                                    <i class="fas fa-history mr-2"></i>
+                        <div class="card p-6 animate-slide-up" style="animation-delay: 0.4s;">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-semibold" style="color: var(--card-foreground);">
+                                    <i class="fas fa-history mr-2" style="color: var(--chart-3);"></i>
                                     Historial de Traducciones
                                 </h2>
                                 <button id="refresh-history-btn" 
-                                        class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors">
+                                        class="btn-secondary px-3 py-2 text-sm">
                                     <i class="fas fa-sync-alt mr-1"></i>
                                     Actualizar
                                 </button>
                             </div>
                             
-                            <div id="history-list" class="space-y-2">
+                            <div id="history-list" class="space-y-3">
                                 <!-- History items will be loaded here -->
+                            </div>
+                            
+                            <div id="no-history" class="text-center py-8 opacity-60 hidden" style="color: var(--card-foreground);">
+                                <i class="fas fa-clock text-3xl mb-3 opacity-40"></i>
+                                <p>No hay traducciones aún</p>
+                                <p class="text-xs mt-1">Realiza tu primera traducción para ver el historial</p>
                             </div>
                         </div>
                     </div>
@@ -488,9 +646,49 @@ app.get('/', (c) => {
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script>
             let currentTranslation = null;
+            let translationStartTime = 0;
+            let progressInterval = null;
+            let timeUpdateInterval = null;
+            
+            // Theme management
+            function toggleTheme() {
+                const html = document.documentElement;
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                
+                const icon = document.getElementById('theme-icon');
+                icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+                
+                localStorage.setItem('theme', newTheme);
+            }
+            
+            // Load saved theme
+            function loadTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const icon = document.getElementById('theme-icon');
+                icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+            
+            // Copy to clipboard function
+            function copyToClipboard() {
+                const textarea = document.getElementById('result-json');
+                textarea.select();
+                document.execCommand('copy');
+                
+                const btn = document.getElementById('copy-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copiado';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }
             
             // Initialize app
             document.addEventListener('DOMContentLoaded', function() {
+                loadTheme();
                 loadLanguages();
                 loadTranslationHistory();
                 setupEventListeners();
@@ -625,60 +823,224 @@ app.get('/', (c) => {
                 }
             }
             
-            // Show/hide progress panel
+            // Advanced progress management with time estimation
             function showProgressPanel() {
                 document.getElementById('progress-panel').classList.remove('hidden');
                 document.getElementById('translate-btn').disabled = true;
                 
-                // Simulate progress (since we don't have real-time updates)
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.random() * 15;
-                    if (progress > 90) progress = 90;
-                    
-                    document.getElementById('progress-bar').style.width = progress + '%';
-                    document.getElementById('progress-text').textContent = Math.round(progress) + '%';
-                }, 500);
+                translationStartTime = Date.now();
                 
-                // Store interval to clear it later
-                window.progressInterval = interval;
+                // Reset progress elements
+                resetProgressSteps();
+                
+                // Start time tracking
+                timeUpdateInterval = setInterval(updateElapsedTime, 100);
+                
+                // Simulate realistic progress with steps
+                simulateTranslationProgress();
+            }
+            
+            function resetProgressSteps() {
+                // Reset all steps
+                for(let i = 1; i <= 4; i++) {
+                    const icon = document.getElementById(\`step-\${i}-icon\`);
+                    const status = document.getElementById(\`step-\${i}-status\`);
+                    
+                    icon.className = 'fas fa-circle mr-2 opacity-30';
+                    status.textContent = 'Esperando';
+                }
+                
+                // Start first step
+                const firstIcon = document.getElementById('step-1-icon');
+                firstIcon.className = 'fas fa-circle-notch fa-spin mr-2 opacity-80';
+                document.getElementById('step-1-status').textContent = 'En proceso...';
+                
+                // Update status indicator
+                updateStatusIndicator('preparing', 'Preparando traducción...');
+            }
+            
+            function updateStatusIndicator(phase, text) {
+                const indicator = document.getElementById('current-status');
+                const statusText = document.getElementById('status-text');
+                
+                // Remove all status classes
+                indicator.className = 'status-indicator';
+                
+                // Add current phase class
+                switch(phase) {
+                    case 'preparing':
+                        indicator.classList.add('status-preparing');
+                        break;
+                    case 'translating':
+                        indicator.classList.add('status-translating');
+                        break;
+                    case 'processing':
+                        indicator.classList.add('status-processing');
+                        break;
+                    case 'completing':
+                        indicator.classList.add('status-completing');
+                        break;
+                    case 'completed':
+                        indicator.classList.add('status-completed');
+                        break;
+                }
+                
+                statusText.textContent = text;
+            }
+            
+            function simulateTranslationProgress() {
+                let step = 1;
+                let progress = 0;
+                const totalSteps = 4;
+                
+                progressInterval = setInterval(() => {
+                    const stepProgress = Math.random() * 3 + 1; // 1-4% per tick
+                    progress += stepProgress;
+                    
+                    // Update progress bar
+                    const clampedProgress = Math.min(progress, 95);
+                    document.getElementById('progress-bar').style.width = clampedProgress + '%';
+                    document.getElementById('progress-text').textContent = Math.round(clampedProgress) + '%';
+                    
+                    // Update progress label and steps
+                    if (progress >= 20 && step === 1) {
+                        completeStep(1);
+                        startStep(2);
+                        updateStatusIndicator('translating', 'Traduciendo contenido...');
+                        document.getElementById('progress-label').textContent = 'Analizando estructura JSON...';
+                        step = 2;
+                    } else if (progress >= 50 && step === 2) {
+                        completeStep(2);
+                        startStep(3);
+                        updateStatusIndicator('processing', 'Procesando estadísticas...');
+                        document.getElementById('progress-label').textContent = 'Traduciendo claves...';
+                        step = 3;
+                    } else if (progress >= 80 && step === 3) {
+                        completeStep(3);
+                        startStep(4);
+                        updateStatusIndicator('completing', 'Finalizando proceso...');
+                        document.getElementById('progress-label').textContent = 'Generando estadísticas...';
+                        step = 4;
+                    }
+                    
+                    // Update estimated time
+                    updateEstimatedTime(progress);
+                    
+                    if (progress >= 95) {
+                        clearInterval(progressInterval);
+                        // Don't complete automatically - wait for real completion
+                    }
+                }, 200);
+            }
+            
+            function completeStep(stepNum) {
+                const icon = document.getElementById(\`step-\${stepNum}-icon\`);
+                const status = document.getElementById(\`step-\${stepNum}-status\`);
+                
+                icon.className = 'fas fa-check-circle mr-2 text-green-500';
+                status.textContent = 'Completado';
+            }
+            
+            function startStep(stepNum) {
+                const icon = document.getElementById(\`step-\${stepNum}-icon\`);
+                const status = document.getElementById(\`step-\${stepNum}-status\`);
+                
+                icon.className = 'fas fa-circle-notch fa-spin mr-2 opacity-80';
+                status.textContent = 'En proceso...';
+            }
+            
+            function updateElapsedTime() {
+                const elapsed = (Date.now() - translationStartTime) / 1000;
+                document.getElementById('elapsed-time').textContent = elapsed.toFixed(1) + 's';
+            }
+            
+            function updateEstimatedTime(progress) {
+                if (progress > 5) {
+                    const elapsed = (Date.now() - translationStartTime) / 1000;
+                    const estimated = (elapsed / progress) * 100;
+                    const remaining = Math.max(0, estimated - elapsed);
+                    
+                    if (remaining > 0) {
+                        document.getElementById('estimated-time').textContent = remaining.toFixed(1) + 's restantes';
+                    } else {
+                        document.getElementById('estimated-time').textContent = 'Finalizando...';
+                    }
+                }
             }
             
             function hideProgressPanel() {
-                if (window.progressInterval) {
-                    clearInterval(window.progressInterval);
-                }
+                // Complete final step
+                completeStep(4);
+                updateStatusIndicator('completed', '¡Traducción completada exitosamente!');
                 
+                // Finish progress bar
                 document.getElementById('progress-bar').style.width = '100%';
                 document.getElementById('progress-text').textContent = '100%';
+                document.getElementById('progress-label').textContent = 'Proceso finalizado';
+                document.getElementById('estimated-time').textContent = 'Completado';
                 
+                // Clear intervals
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+                
+                if (timeUpdateInterval) {
+                    clearInterval(timeUpdateInterval);
+                    timeUpdateInterval = null;
+                }
+                
+                // Hide panel after delay
                 setTimeout(() => {
                     document.getElementById('progress-panel').classList.add('hidden');
                     document.getElementById('translate-btn').disabled = false;
-                }, 500);
+                }, 2000);
             }
             
-            // Display translation results
+            // Display translation results with enhanced metrics
             function displayTranslationResults(data) {
                 const stats = data.statistics;
                 
-                // Update statistics
+                // Basic statistics
                 document.getElementById('translated-count').textContent = stats.translatedKeys;
                 document.getElementById('failed-count').textContent = stats.failedKeys;
                 document.getElementById('total-time').textContent = stats.processingTimeMs + 'ms';
                 document.getElementById('avg-time').textContent = Math.round(stats.averageTimePerKey) + 'ms';
                 
-                // Update success rate
+                // Success rate
                 const successRate = stats.totalKeys > 0 ? (stats.translatedKeys / stats.totalKeys * 100) : 0;
                 document.getElementById('success-rate-bar').style.width = successRate + '%';
                 document.getElementById('success-rate-text').textContent = Math.round(successRate) + '%';
                 
-                // Show translated JSON
-                document.getElementById('result-json').value = JSON.stringify(data.translatedJson, null, 2);
+                // Additional metrics
+                const keysPerSecond = stats.processingTimeMs > 0 ? (stats.translatedKeys / (stats.processingTimeMs / 1000)).toFixed(1) : 0;
+                document.getElementById('keys-per-second').textContent = keysPerSecond;
                 
-                // Show panels
-                document.getElementById('stats-panel').classList.remove('hidden');
-                document.getElementById('result-panel').classList.remove('hidden');
+                const efficiency = successRate; // Same as success rate for now
+                document.getElementById('efficiency-score').textContent = Math.round(efficiency) + '%';
+                
+                // Count total characters in original JSON
+                const originalText = JSON.stringify(data.translatedJson);
+                const totalChars = originalText.length;
+                document.getElementById('total-chars').textContent = totalChars > 1000 ? 
+                    (totalChars / 1000).toFixed(1) + 'k' : totalChars;
+                
+                // Show translated JSON with size info
+                const translatedJsonText = JSON.stringify(data.translatedJson, null, 2);
+                document.getElementById('result-json').value = translatedJsonText;
+                
+                const jsonSize = new Blob([translatedJsonText]).size;
+                document.getElementById('json-size').textContent = jsonSize > 1024 ? 
+                    (jsonSize / 1024).toFixed(1) + ' KB' : jsonSize + ' bytes';
+                
+                // Show panels with animation
+                setTimeout(() => {
+                    document.getElementById('stats-panel').classList.remove('hidden');
+                }, 100);
+                
+                setTimeout(() => {
+                    document.getElementById('result-panel').classList.remove('hidden');
+                }, 200);
             }
             
             // Download translated JSON
@@ -698,23 +1060,28 @@ app.get('/', (c) => {
                 URL.revokeObjectURL(url);
             }
             
-            // Load translation history
+            // Load translation history with enhanced styling
             async function loadTranslationHistory() {
                 try {
                     const response = await axios.get('/api/translations');
                     const translations = response.data.translations;
                     
                     const historyList = document.getElementById('history-list');
+                    const noHistory = document.getElementById('no-history');
                     historyList.innerHTML = '';
                     
                     if (translations.length === 0) {
-                        historyList.innerHTML = '<p class="text-gray-500 text-center py-4">No hay traducciones aún</p>';
+                        noHistory.classList.remove('hidden');
                         return;
                     }
                     
-                    translations.forEach(translation => {
+                    noHistory.classList.add('hidden');
+                    
+                    translations.forEach((translation, index) => {
                         const item = document.createElement('div');
-                        item.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg';
+                        item.className = 'card p-4 hover:shadow-md transition-all duration-200 cursor-pointer';
+                        item.style.animationDelay = (index * 0.1) + 's';
+                        item.classList.add('animate-fade-in');
                         
                         const successRate = translation.total_keys > 0 ? 
                             Math.round(translation.translated_keys / translation.total_keys * 100) : 0;
@@ -727,17 +1094,51 @@ app.get('/', (c) => {
                             minute: '2-digit'
                         });
                         
+                        // Success rate color
+                        const rateColor = successRate >= 90 ? 'var(--chart-2)' : 
+                                         successRate >= 70 ? 'var(--chart-3)' : 'var(--destructive)';
+                        
                         item.innerHTML = \`
-                            <div>
-                                <div class="font-medium">\${translation.source_language} → \${translation.target_language}</div>
-                                <div class="text-sm text-gray-600">
-                                    \${translation.translated_keys}/\${translation.total_keys} claves • \${successRate}% éxito • \${date}
+                            <div class="flex justify-between items-center">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="flex items-center gap-2 font-medium" style="color: var(--card-foreground);">
+                                            <i class="fas fa-exchange-alt" style="color: var(--primary);"></i>
+                                            <span class="px-2 py-1 rounded text-xs" style="background-color: oklch(from var(--primary) l c h / 0.1); color: var(--primary);">
+                                                \${translation.source_language}
+                                            </span>
+                                            <i class="fas fa-arrow-right text-xs opacity-50"></i>
+                                            <span class="px-2 py-1 rounded text-xs" style="background-color: oklch(from var(--secondary) l c h / 0.1); color: var(--secondary);">
+                                                \${translation.target_language}
+                                            </span>
+                                        </div>
+                                        <div class="px-2 py-1 rounded text-xs font-semibold" style="background-color: oklch(from \${rateColor} l c h / 0.1); color: \${rateColor};">
+                                            \${successRate}% éxito
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-4 text-sm opacity-70" style="color: var(--card-foreground);">
+                                        <span>
+                                            <i class="fas fa-key mr-1"></i>
+                                            \${translation.translated_keys}/\${translation.total_keys} claves
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-clock mr-1"></i>
+                                            \${translation.processing_time_ms}ms
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            \${date}
+                                        </span>
+                                    </div>
                                 </div>
+                                
+                                <button onclick="viewTranslationDetails(\${translation.id})" 
+                                        class="btn-secondary px-3 py-2 text-sm ml-4">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    Ver
+                                </button>
                             </div>
-                            <button onclick="viewTranslationDetails(\${translation.id})" 
-                                    class="text-blue-500 hover:text-blue-700">
-                                <i class="fas fa-eye"></i>
-                            </button>
                         \`;
                         
                         historyList.appendChild(item);
@@ -745,69 +1146,177 @@ app.get('/', (c) => {
                     
                 } catch (error) {
                     console.error('Error loading history:', error);
+                    const historyList = document.getElementById('history-list');
+                    historyList.innerHTML = \`
+                        <div class="text-center py-4 text-red-500">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Error al cargar el historial
+                        </div>
+                    \`;
                 }
             }
             
-            // View translation details
+            // View translation details with enhanced modal
             async function viewTranslationDetails(translationId) {
                 try {
                     const response = await axios.get(\`/api/translations/\${translationId}/stats\`);
                     const data = response.data;
                     
-                    // Create modal or detailed view
+                    // Create enhanced modal
                     const modal = document.createElement('div');
-                    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4';
+                    modal.style.backdropFilter = 'blur(4px)';
+                    
+                    const successRate = parseFloat(data.summary.successRate);
+                    const rateColor = successRate >= 90 ? 'var(--chart-2)' : 
+                                     successRate >= 70 ? 'var(--chart-3)' : 'var(--destructive)';
+                    
                     modal.innerHTML = \`
-                        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-xl font-bold">Detalles de Traducción</h3>
-                                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                                        class="text-gray-500 hover:text-gray-700">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div class="bg-blue-50 p-3 rounded">
-                                    <div class="font-bold text-blue-600">\${data.summary.totalKeys}</div>
-                                    <div class="text-sm">Total Claves</div>
+                        <div class="card max-w-5xl w-full max-h-screen overflow-y-auto animate-slide-up" style="background-color: var(--card); border: 1px solid var(--border);">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="text-2xl font-bold" style="color: var(--card-foreground);">
+                                        <i class="fas fa-chart-line mr-3" style="color: var(--primary);"></i>
+                                        Detalles de Traducción
+                                    </h3>
+                                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
+                                            class="btn-secondary px-3 py-2">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
-                                <div class="bg-green-50 p-3 rounded">
-                                    <div class="font-bold text-green-600">\${data.summary.translatedKeys}</div>
-                                    <div class="text-sm">Exitosas</div>
+                                
+                                <!-- Summary Stats -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    <div class="stat-time p-4 rounded-lg text-center">
+                                        <div class="text-3xl font-bold">\${data.summary.totalKeys}</div>
+                                        <div class="text-sm opacity-80">Total Claves</div>
+                                    </div>
+                                    <div class="stat-success p-4 rounded-lg text-center">
+                                        <div class="text-3xl font-bold">\${data.summary.translatedKeys}</div>
+                                        <div class="text-sm opacity-80">Exitosas</div>
+                                    </div>
+                                    <div class="stat-error p-4 rounded-lg text-center">
+                                        <div class="text-3xl font-bold">\${data.summary.failedKeys}</div>
+                                        <div class="text-sm opacity-80">Fallidas</div>
+                                    </div>
+                                    <div class="p-4 rounded-lg text-center" style="background-color: oklch(from \${rateColor} l c h / 0.1); color: \${rateColor}; border: 1px solid oklch(from \${rateColor} l c h / 0.2);">
+                                        <div class="text-3xl font-bold">\${data.summary.successRate}%</div>
+                                        <div class="text-sm opacity-80">Tasa Éxito</div>
+                                    </div>
                                 </div>
-                                <div class="bg-red-50 p-3 rounded">
-                                    <div class="font-bold text-red-600">\${data.summary.failedKeys}</div>
-                                    <div class="text-sm">Fallidas</div>
-                                </div>
-                                <div class="bg-purple-50 p-3 rounded">
-                                    <div class="font-bold text-purple-600">\${data.summary.successRate}%</div>
-                                    <div class="text-sm">Tasa Éxito</div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <h4 class="font-semibold mb-2">Detalles por Clave</h4>
-                                <div class="max-h-64 overflow-y-auto">
-                                    \${data.details.map(detail => \`
-                                        <div class="flex justify-between items-center p-2 border-b">
-                                            <div class="flex-1 truncate">
-                                                <div class="font-mono text-sm">\${detail.json_key}</div>
-                                                <div class="text-xs text-gray-500">\${detail.original_value}</div>
+                                
+                                <!-- Translation Info -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div class="card p-4" style="background-color: oklch(from var(--primary) l c h / 0.05); border: 1px solid oklch(from var(--primary) l c h / 0.1);">
+                                        <h4 class="font-semibold mb-3" style="color: var(--primary);">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Información General
+                                        </h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Idiomas:</span>
+                                                <span class="font-medium">\${data.translation.source_language} → \${data.translation.target_language}</span>
                                             </div>
-                                            <div class="ml-2">
-                                                <span class="px-2 py-1 rounded text-xs \${detail.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                                    \${detail.status}
-                                                </span>
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Tiempo total:</span>
+                                                <span class="font-medium">\${data.translation.processing_time_ms}ms</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Tiempo promedio:</span>
+                                                <span class="font-medium">\${data.summary.averageTimePerKey}ms/clave</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Sesión:</span>
+                                                <span class="font-mono text-xs">\${data.translation.session_id}</span>
                                             </div>
                                         </div>
-                                    \`).join('')}
+                                    </div>
+                                    
+                                    <div class="card p-4" style="background-color: oklch(from var(--chart-2) l c h / 0.05); border: 1px solid oklch(from var(--chart-2) l c h / 0.1);">
+                                        <h4 class="font-semibold mb-3" style="color: var(--chart-2);">
+                                            <i class="fas fa-tachometer-alt mr-2"></i>
+                                            Métricas de Rendimiento
+                                        </h4>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Velocidad:</span>
+                                                <span class="font-medium">\${(data.summary.totalKeys / (data.translation.processing_time_ms / 1000)).toFixed(1)} claves/seg</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Eficiencia:</span>
+                                                <span class="font-medium">\${data.summary.successRate}%</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="opacity-70">Fecha:</span>
+                                                <span class="font-medium">\${new Date(data.translation.created_at).toLocaleDateString('es-ES', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detailed breakdown -->
+                                <div class="mb-6">
+                                    <h4 class="text-lg font-semibold mb-4" style="color: var(--card-foreground);">
+                                        <i class="fas fa-list-ul mr-2" style="color: var(--chart-3);"></i>
+                                        Detalles por Clave (\${data.details.length} elementos)
+                                    </h4>
+                                    <div class="card max-h-80 overflow-y-auto" style="background-color: var(--input);">
+                                        \${data.details.map(detail => \`
+                                            <div class="flex justify-between items-start p-3 border-b border-opacity-20" style="border-color: var(--border);">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-mono text-sm font-semibold mb-1" style="color: var(--primary);">
+                                                        \${detail.json_key}
+                                                    </div>
+                                                    <div class="text-xs opacity-70 mb-1 truncate" style="color: var(--foreground);">
+                                                        <strong>Original:</strong> \${detail.original_value}
+                                                    </div>
+                                                    \${detail.translated_value ? \`
+                                                        <div class="text-xs opacity-70 truncate" style="color: var(--foreground);">
+                                                            <strong>Traducido:</strong> \${detail.translated_value}
+                                                        </div>
+                                                    \` : ''}
+                                                </div>
+                                                <div class="ml-4 flex flex-col items-end gap-1">
+                                                    <span class="px-2 py-1 rounded text-xs font-medium \${detail.status === 'success' ? 'stat-success' : 'stat-error'}">
+                                                        <i class="fas fa-\${detail.status === 'success' ? 'check' : 'times'} mr-1"></i>
+                                                        \${detail.status}
+                                                    </span>
+                                                    \${detail.translation_time_ms ? \`
+                                                        <span class="text-xs opacity-60" style="color: var(--foreground);">
+                                                            \${detail.translation_time_ms}ms
+                                                        </span>
+                                                    \` : ''}
+                                                </div>
+                                            </div>
+                                        \`).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                                            class="btn-primary px-6 py-3">
+                                        <i class="fas fa-check mr-2"></i>
+                                        Cerrar
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     \`;
                     
                     document.body.appendChild(modal);
+                    
+                    // Close on backdrop click
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
                     
                 } catch (error) {
                     console.error('Error loading translation details:', error);
