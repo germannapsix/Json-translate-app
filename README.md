@@ -14,9 +14,9 @@
 
 ## URLs
 
-### 🌐 **PRODUCCIÓN** (Cloudflare Pages) ✅ FUNCIONANDO
+### 🌐 **PRODUCCIÓN** (Cloudflare Pages) ✅ OPTIMIZADO Y FUNCIONANDO
 - **🟢 Aplicación Principal**: https://json-translate-napsix.pages.dev
-- **🟢 Deployment Actual**: https://3e313bf9.json-translate-napsix.pages.dev
+- **🟢 Deployment Actual**: https://5be608a7.json-translate-napsix.pages.dev  
 - **🟢 Branch Main**: https://main.json-translate-napsix.pages.dev
 - **🟢 API de Idiomas**: https://json-translate-napsix.pages.dev/api/languages
 - **🟢 API de Traducción**: https://json-translate-napsix.pages.dev/api/translate
@@ -53,6 +53,25 @@
 - **Historial Enriquecido**: Información detallada, filtros visuales, estados de éxito
 - **Modal Detallada**: Vista expandida con métricas completas por traducción
 - **Funciones de Productividad**: Botón copiar, indicador de tamaño de archivo
+
+## 🚀 Actualizaciones v2.1.0 - Rate Limiting Optimized
+
+### ⚡ Optimizaciones de Rendimiento
+- **Batch Processing**: Traducciones procesadas en grupos de 5 para evitar rate limiting
+- **Rate Limiting**: Delay de 1 segundo entre batches para cumplir límites de API
+- **Timeout Protection**: Timeout de 25 segundos para evitar cuelgues del worker
+- **Size Limiting**: Máximo 50 strings por JSON para garantizar rendimiento óptimo
+
+### 🛡️ Manejo de Errores Mejorado
+- **Error Messages**: Mensajes de error específicos y descriptivos
+- **Retry Suggestions**: Guías para el usuario sobre cómo resolver problemas
+- **Graceful Degradation**: Fallback a texto original en caso de falla
+- **Warning System**: Notificaciones cuando se omiten strings por límites
+
+### 📊 Estadísticas Optimizadas
+- **Batch Insertion**: Inserción de datos en lotes para mejor rendimiento
+- **Status Tracking**: Seguimiento de estados: success, failed, skipped
+- **Performance Metrics**: Métricas de tiempo más precisas por batch
 
 ## Funcionalidades Implementadas
 
@@ -201,9 +220,9 @@
 - **Build Command**: vite build
 - **Output Directory**: dist/
 
-- **Last Updated**: 2025-08-20  
-- **Version**: 2.0.0 - Napsix Chat Edition
-- **Production Deploy**: ✅ COMPLETADO
+- **Last Updated**: 2025-08-21  
+- **Version**: 2.1.0 - Napsix Chat Edition (Rate Limiting Optimized)
+- **Production Deploy**: ✅ COMPLETADO Y OPTIMIZADO
 
 ## Próximos Pasos Recomendados
 

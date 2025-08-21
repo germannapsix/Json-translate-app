@@ -15,11 +15,19 @@ app.use('/api/*', cors())
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
 
-// Función auxiliar para traducir texto usando Cloudflare AI
+// Rate limiting para evitar "Too many API requests"
+const BATCH_SIZE = 5; // Máximo 5 traducciones por batch
+const BATCH_DELAY = 1000; // 1 segundo entre batches
+
+// Función auxiliar para traducir texto usando Cloudflare AI con rate limiting
 async function translateText(ai: Ai, text: string, sourceLang: string, targetLang: string): Promise<string> {
   try {
+    // Limitar la longitud del texto para evitar timeouts
+    const maxLength = 1000;
+    const truncatedText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    
     const response = await ai.run('@cf/meta/m2m100-1.2b', {
-      text: text,
+      text: truncatedText,
       source_lang: sourceLang === 'auto' ? undefined : sourceLang,
       target_lang: targetLang
     });
@@ -31,61 +39,176 @@ async function translateText(ai: Ai, text: string, sourceLang: string, targetLan
   }
 }
 
-// Función recursiva para traducir objetos JSON
-async function translateJsonObject(
-  ai: Ai, 
-  obj: any, 
-  sourceLang: string, 
-  targetLang: string, 
-  details: any[], 
-  translationId: number,
-  path: string = ''
-): Promise<any> {
-  if (typeof obj === 'string') {
-    const startTime = Date.now();
-    try {
-      const translated = await translateText(ai, obj, sourceLang, targetLang);
-      const endTime = Date.now();
-      
-      details.push({
-        translation_id: translationId,
-        json_key: path,
-        original_value: obj,
-        translated_value: translated,
-        status: 'success',
-        translation_time_ms: endTime - startTime
-      });
-      
-      return translated;
-    } catch (error) {
-      const endTime = Date.now();
-      details.push({
-        translation_id: translationId,
-        json_key: path,
-        original_value: obj,
-        translated_value: null,
-        status: 'failed',
-        error_message: error instanceof Error ? error.message : 'Unknown error',
-        translation_time_ms: endTime - startTime
-      });
-      return obj; // Return original on error
+// Función para traducir múltiples textos en batches
+async function translateBatch(ai: Ai, texts: string[], sourceLang: string, targetLang: string): Promise<string[]> {
+  const results: string[] = [];
+  
+  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batch = texts.slice(i, i + BATCH_SIZE);
+    
+    // Procesar el batch actual
+    const batchPromises = batch.map(text => translateText(ai, text, sourceLang, targetLang));
+    const batchResults = await Promise.all(batchPromises);
+    
+    results.push(...batchResults);
+    
+    // Esperar antes del siguiente batch (excepto en el último)
+    if (i + BATCH_SIZE < texts.length) {
+      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
     }
+  }
+  
+  return results;
+}
+
+// Función para extraer todos los strings de un objeto JSON
+function extractStrings(obj: any, path: string = ''): { text: string; path: string }[] {
+  const strings: { text: string; path: string }[] = [];
+  
+  if (typeof obj === 'string') {
+    strings.push({ text: obj, path });
+  } else if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      strings.push(...extractStrings(obj[i], `${path}[${i}]`));
+    }
+  } else if (obj !== null && typeof obj === 'object') {
+    for (const [key, value] of Object.entries(obj)) {
+      const currentPath = path ? `${path}.${key}` : key;
+      strings.push(...extractStrings(value, currentPath));
+    }
+  }
+  
+  return strings;
+}
+
+// Función para reconstruir el objeto con las traducciones
+function reconstructObject(obj: any, translations: Map<string, string>, path: string = ''): any {
+  if (typeof obj === 'string') {
+    return translations.get(path) || obj;
   } else if (Array.isArray(obj)) {
     const result = [];
     for (let i = 0; i < obj.length; i++) {
-      result[i] = await translateJsonObject(ai, obj[i], sourceLang, targetLang, details, translationId, `${path}[${i}]`);
+      result[i] = reconstructObject(obj[i], translations, `${path}[${i}]`);
     }
     return result;
   } else if (obj !== null && typeof obj === 'object') {
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
-      result[key] = await translateJsonObject(ai, value, sourceLang, targetLang, details, translationId, currentPath);
+      result[key] = reconstructObject(value, translations, currentPath);
     }
     return result;
   }
   
   return obj; // Return primitive values unchanged (numbers, booleans, null)
+}
+
+// Función optimizada para traducir objetos JSON con batching
+async function translateJsonObject(
+  ai: Ai, 
+  obj: any, 
+  sourceLang: string, 
+  targetLang: string, 
+  details: any[], 
+  translationId: number
+): Promise<any> {
+  const startTime = Date.now();
+  
+  try {
+    // Extraer todos los strings del objeto
+    const stringEntries = extractStrings(obj);
+    
+    // Verificar si hay strings para traducir
+    if (stringEntries.length === 0) {
+      return obj; // No hay strings para traducir
+    }
+    
+    // Limitar el número de traducciones para evitar timeouts
+    const MAX_TRANSLATIONS = 20;
+    if (stringEntries.length > MAX_TRANSLATIONS) {
+      // Si hay demasiados strings, traducir solo los primeros y dejar el resto igual
+      const limitedEntries = stringEntries.slice(0, MAX_TRANSLATIONS);
+      const texts = limitedEntries.map(entry => entry.text);
+      
+      // Traducir en batches
+      const translatedTexts = await translateBatch(ai, texts, sourceLang, targetLang);
+      
+      // Crear mapa de traducciones
+      const translationMap = new Map<string, string>();
+      limitedEntries.forEach((entry, index) => {
+        translationMap.set(entry.path, translatedTexts[index]);
+        
+        // Agregar a detalles
+        const endTime = Date.now();
+        details.push({
+          translation_id: translationId,
+          json_key: entry.path,
+          original_value: entry.text,
+          translated_value: translatedTexts[index],
+          status: 'success',
+          translation_time_ms: Math.round((endTime - startTime) / limitedEntries.length)
+        });
+      });
+      
+      // Agregar strings no traducidos a detalles
+      stringEntries.slice(MAX_TRANSLATIONS).forEach(entry => {
+        details.push({
+          translation_id: translationId,
+          json_key: entry.path,
+          original_value: entry.text,
+          translated_value: entry.text,
+          status: 'skipped',
+          error_message: 'Skipped due to rate limiting',
+          translation_time_ms: 0
+        });
+      });
+      
+      // Reconstruir objeto con traducciones limitadas
+      return reconstructObject(obj, translationMap);
+    } else {
+      // Traducir todos los strings
+      const texts = stringEntries.map(entry => entry.text);
+      const translatedTexts = await translateBatch(ai, texts, sourceLang, targetLang);
+      
+      // Crear mapa de traducciones
+      const translationMap = new Map<string, string>();
+      stringEntries.forEach((entry, index) => {
+        translationMap.set(entry.path, translatedTexts[index]);
+        
+        // Agregar a detalles
+        const endTime = Date.now();
+        details.push({
+          translation_id: translationId,
+          json_key: entry.path,
+          original_value: entry.text,
+          translated_value: translatedTexts[index],
+          status: 'success',
+          translation_time_ms: Math.round((endTime - startTime) / stringEntries.length)
+        });
+      });
+      
+      // Reconstruir objeto con todas las traducciones
+      return reconstructObject(obj, translationMap);
+    }
+  } catch (error) {
+    console.error('Translation error:', error);
+    
+    // En caso de error, agregar todos los strings como fallidos
+    const stringEntries = extractStrings(obj);
+    stringEntries.forEach(entry => {
+      details.push({
+        translation_id: translationId,
+        json_key: entry.path,
+        original_value: entry.text,
+        translated_value: entry.text,
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Translation failed',
+        translation_time_ms: 0
+      });
+    });
+    
+    return obj; // Return original object on error
+  }
 }
 
 // Función para contar claves de strings en un objeto JSON
@@ -119,12 +242,23 @@ app.post('/api/translate', async (c) => {
   const sessionId = crypto.randomUUID();
   const startTime = Date.now();
   
+  // Timeout para evitar que el worker se cuelgue
+  const TRANSLATION_TIMEOUT = 25000; // 25 seconds (Cloudflare Workers timeout is 30s)
+  
   try {
     // Parse JSON if it's a string
     const parsedJson = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
     
     // Count total keys
     const totalKeys = countStringKeys(parsedJson);
+    
+    // Limitar el tamaño del JSON para evitar timeouts
+    if (totalKeys > 50) {
+      return c.json({ 
+        error: 'JSON too large', 
+        message: `El JSON contiene ${totalKeys} strings. Máximo permitido: 50. Por favor use un JSON más pequeño.` 
+      }, 400);
+    }
     
     // Create translation record
     const translationResult = await env.DB.prepare(`
@@ -134,9 +268,17 @@ app.post('/api/translate', async (c) => {
     
     const translationId = translationResult.meta.last_row_id;
     
-    // Translate JSON object
+    // Crear timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Translation timeout - please try with a smaller JSON')), TRANSLATION_TIMEOUT);
+    });
+    
+    // Translate JSON object with batching and rate limiting
     const details: any[] = [];
-    const translatedJson = await translateJsonObject(env.AI, parsedJson, sourceLang, targetLang, details, translationId);
+    const translationPromise = translateJsonObject(env.AI, parsedJson, sourceLang, targetLang, details, translationId);
+    
+    // Usar Promise.race para timeout
+    const translatedJson = await Promise.race([translationPromise, timeoutPromise]) as any;
     
     const endTime = Date.now();
     const processingTime = endTime - startTime;
@@ -144,28 +286,33 @@ app.post('/api/translate', async (c) => {
     // Count successful and failed translations
     const successCount = details.filter(d => d.status === 'success').length;
     const failedCount = details.filter(d => d.status === 'failed').length;
+    const skippedCount = details.filter(d => d.status === 'skipped').length;
     
     // Update translation record with results
     await env.DB.prepare(`
       UPDATE translations 
       SET translated_json = ?, translated_keys = ?, failed_keys = ?, processing_time_ms = ?
       WHERE id = ?
-    `).bind(JSON.stringify(translatedJson), successCount, failedCount, processingTime, translationId).run();
+    `).bind(JSON.stringify(translatedJson), successCount, failedCount + skippedCount, processingTime, translationId).run();
     
-    // Insert translation details
-    for (const detail of details) {
-      await env.DB.prepare(`
-        INSERT INTO translation_details (translation_id, json_key, original_value, translated_value, status, error_message, translation_time_ms)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        detail.translation_id,
-        detail.json_key,
-        detail.original_value,
-        detail.translated_value,
-        detail.status,
-        detail.error_message || null,
-        detail.translation_time_ms
-      ).run();
+    // Insert translation details (batch insert for better performance)
+    if (details.length > 0) {
+      const detailInserts = details.map(detail => 
+        env.DB.prepare(`
+          INSERT INTO translation_details (translation_id, json_key, original_value, translated_value, status, error_message, translation_time_ms)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          detail.translation_id,
+          detail.json_key,
+          detail.original_value,
+          detail.translated_value,
+          detail.status,
+          detail.error_message || null,
+          detail.translation_time_ms
+        )
+      );
+      
+      await env.DB.batch(detailInserts);
     }
     
     return c.json({
@@ -177,18 +324,38 @@ app.post('/api/translate', async (c) => {
         totalKeys,
         translatedKeys: successCount,
         failedKeys: failedCount,
+        skippedKeys: skippedCount,
         processingTimeMs: processingTime,
         averageTimePerKey: totalKeys > 0 ? processingTime / totalKeys : 0
       },
-      details
+      details,
+      warning: skippedCount > 0 ? `${skippedCount} strings were skipped due to rate limiting` : null
     });
     
   } catch (error) {
     console.error('Translation error:', error);
+    
+    // Manejar diferentes tipos de errores
+    let errorMessage = 'Translation failed';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        errorMessage = 'Translation timeout - please try with a smaller JSON';
+        statusCode = 408;
+      } else if (error.message.includes('Too many API requests')) {
+        errorMessage = 'Rate limit exceeded - please wait a moment and try again';
+        statusCode = 429;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return c.json({ 
       error: 'Translation failed', 
-      message: error instanceof Error ? error.message : 'Unknown error' 
-    }, 500);
+      message: errorMessage,
+      suggestion: 'Try with a smaller JSON file or wait a few seconds before retrying'
+    }, statusCode);
   }
 });
 
@@ -778,26 +945,39 @@ app.get('/', (c) => {
                 reader.readAsText(file);
             }
             
-            // Translate JSON
+            // Translate JSON with improved error handling
             async function translateJSON() {
                 const jsonInput = document.getElementById('json-input').value;
                 const sourceLang = document.getElementById('source-lang').value;
                 const targetLang = document.getElementById('target-lang').value;
                 
                 if (!jsonInput.trim()) {
-                    alert('Por favor ingresa o carga un archivo JSON.');
+                    showErrorMessage('Por favor ingresa o carga un archivo JSON.');
                     return;
                 }
                 
                 if (!targetLang) {
-                    alert('Por favor selecciona un idioma destino.');
+                    showErrorMessage('Por favor selecciona un idioma destino.');
                     return;
                 }
                 
+                let parsedJson;
                 try {
-                    JSON.parse(jsonInput); // Validate JSON
+                    parsedJson = JSON.parse(jsonInput);
                 } catch (error) {
-                    alert('El JSON no es válido. Por favor revisa la sintaxis.');
+                    showErrorMessage('El JSON no es válido. Por favor revisa la sintaxis.');
+                    return;
+                }
+                
+                // Verificar tamaño del JSON
+                const stringCount = countJSONStrings(parsedJson);
+                if (stringCount > 50) {
+                    showErrorMessage(\`El JSON es muy grande (\${stringCount} strings). Máximo permitido: 50. Por favor usa un JSON más pequeño.\`);
+                    return;
+                }
+                
+                if (stringCount === 0) {
+                    showErrorMessage('El JSON no contiene strings para traducir.');
                     return;
                 }
                 
@@ -812,15 +992,104 @@ app.get('/', (c) => {
                     });
                     
                     currentTranslation = response.data;
+                    
+                    // Mostrar advertencia si hay strings omitidos
+                    if (response.data.warning) {
+                        showWarningMessage(response.data.warning);
+                    }
+                    
                     displayTranslationResults(currentTranslation);
                     hideProgressPanel();
                     loadTranslationHistory();
                     
                 } catch (error) {
                     console.error('Translation error:', error);
-                    alert('Error durante la traducción: ' + (error.response?.data?.message || error.message));
                     hideProgressPanel();
+                    
+                    let errorMessage = 'Error durante la traducción';
+                    
+                    if (error.response?.status === 429) {
+                        errorMessage = 'Límite de velocidad excedido. Por favor espera un momento y vuelve a intentar.';
+                    } else if (error.response?.status === 408) {
+                        errorMessage = 'Tiempo de espera agotado. Intenta con un JSON más pequeño.';
+                    } else if (error.response?.status === 400) {
+                        errorMessage = error.response.data.message || 'Datos inválidos';
+                    } else {
+                        errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+                    }
+                    
+                    showErrorMessage(errorMessage);
                 }
+            }
+            
+            // Función para contar strings en JSON (frontend)
+            function countJSONStrings(obj) {
+                let count = 0;
+                if (typeof obj === 'string') {
+                    return 1;
+                } else if (Array.isArray(obj)) {
+                    for (const item of obj) {
+                        count += countJSONStrings(item);
+                    }
+                } else if (obj && typeof obj === 'object') {
+                    for (const value of Object.values(obj)) {
+                        count += countJSONStrings(value);
+                    }
+                }
+                return count;
+            }
+            
+            // Función para mostrar errores mejorada
+            function showErrorMessage(message) {
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4';
+                modal.innerHTML = \`
+                    <div class="card max-w-md w-full p-6 animate-slide-up" style="background-color: var(--card); border: 2px solid var(--destructive);">
+                        <div class="text-center">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-4" style="color: var(--destructive);"></i>
+                            <h3 class="text-lg font-bold mb-3" style="color: var(--destructive);">Error</h3>
+                            <p class="mb-6" style="color: var(--card-foreground);">\${message}</p>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                                    class="btn-primary px-6 py-2">
+                                <i class="fas fa-check mr-2"></i>
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                \`;
+                document.body.appendChild(modal);
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        modal.remove();
+                    }
+                }, 10000);
+            }
+            
+            // Función para mostrar advertencias
+            function showWarningMessage(message) {
+                const banner = document.createElement('div');
+                banner.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md';
+                banner.innerHTML = \`
+                    <div class="stat-avg p-4 rounded-lg shadow-lg animate-slide-up">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="font-medium">\${message}</span>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="ml-auto">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                \`;
+                document.body.appendChild(banner);
+                
+                // Auto-remove after 8 seconds
+                setTimeout(() => {
+                    if (banner.parentNode) {
+                        banner.remove();
+                    }
+                }, 8000);
             }
             
             // Advanced progress management with time estimation
