@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
+  "name": "json-translate-napsix",
   "compatibility_date": "2025-08-20",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
@@ -9,8 +9,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "webapp-production",
-      "database_id": "temp-local-id"
+      "database_name": "json-translate-napsix-production",
+      "database_id": "890d8663-4582-4d42-877e-6f2539eeec2b"
     }
   ],
   "ai": {
