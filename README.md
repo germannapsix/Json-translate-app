@@ -13,9 +13,21 @@
   - Informes completos con métricas de rendimiento
 
 ## URLs
+
+### 🌐 **PRODUCCIÓN** (Cloudflare Pages)
+- **Aplicación Principal**: https://json-translate-napsix.pages.dev
+- **Deployment Actual**: https://f23bb204.json-translate-napsix.pages.dev
+- **Branch Master**: https://master.json-translate-napsix.pages.dev
+- **API de Idiomas**: https://json-translate-napsix.pages.dev/api/languages
+- **API de Traducción**: https://json-translate-napsix.pages.dev/api/translate
+
+### 🔧 **DESARROLLO** (Sandbox)
 - **Aplicación**: https://3000-i0wiom2yqfg0dliarfa3g-6532622b.e2b.dev
 - **API de Idiomas**: https://3000-i0wiom2yqfg0dliarfa3g-6532622b.e2b.dev/api/languages
 - **API de Traducción**: https://3000-i0wiom2yqfg0dliarfa3g-6532622b.e2b.dev/api/translate
+
+### 📂 **REPOSITORIO**
+- **GitHub**: https://github.com/germannapsix/Json-translate-app
 
 ## ✨ Actualizaciones v2.0 - Napsix Chat Style
 
@@ -165,16 +177,31 @@
 
 ## Deployment
 
+### 🚀 **PRODUCCIÓN**
 - **Platform**: Cloudflare Pages con Workers
-- **Status**: ✅ Activo y Funcionando
-- **Tech Stack**: 
-  - Backend: Hono + TypeScript + Cloudflare AI
-  - Frontend: HTML5 + TailwindCSS + JavaScript
-  - Database: Cloudflare D1 (SQLite)
-  - Deployment: Cloudflare Pages + PM2
+- **Status**: ✅ Desplegado y Funcionando  
+- **URL Principal**: https://json-translate-napsix.pages.dev
+- **Base de Datos**: Cloudflare D1 (ID: 890d8663-4582-4d42-877e-6f2539eeec2b)
+- **IA**: Cloudflare AI Workers (@cf/meta/m2m100-1.2b)
+- **CDN Global**: Distributed en edge locations mundialmente
+
+### 🛠️ **TECNOLOGÍAS**
+- **Backend**: Hono + TypeScript + Cloudflare AI
+- **Frontend**: HTML5 + TailwindCSS + JavaScript + Napsix Style System
+- **Database**: Cloudflare D1 (SQLite distribuido)
+- **Deployment**: Cloudflare Pages + Wrangler CLI
+- **Versionado**: GitHub (germannapsix/Json-translate-app)
+
+### 📊 **CONFIGURACIÓN DE PRODUCCIÓN**
+- **Project Name**: json-translate-napsix
+- **Database**: json-translate-napsix-production
+- **Branch**: master (producción)
+- **Build Command**: vite build
+- **Output Directory**: dist/
 
 - **Last Updated**: 2025-08-20  
 - **Version**: 2.0.0 - Napsix Chat Edition
+- **Production Deploy**: ✅ COMPLETADO
 
 ## Próximos Pasos Recomendados
 
